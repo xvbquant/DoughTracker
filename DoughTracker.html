@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DoughTracker</title>
+  <style>
+    :root {
+      --navy:       #0d1b2a;
+      --navy-mid:   #162032;
+      --navy-card:  #1a2840;
+      --navy-light: #243b55;
+      --gold:       #f0c040;
+      --gold-light: #f5d470;
+      --gold-dim:   #b8942a;
+      --white:      #f0f4f8;
+      --gray:       #7a8fa6;
+      --border:     #243b55;
+      --green:      #3dbf7a;
+      --red:        #e05c6a;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--navy);
+      color: var(--white);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--navy-mid);
+      border-bottom: 2px solid var(--gold-dim);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 1.4rem; font-weight: 800; color: var(--gold); letter-spacing: 0.04em; }
+    .logo span { color: var(--white); font-weight: 400; }
+    #headerDate { font-size: 0.78rem; color: var(--gray); }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      background: var(--navy-mid);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      gap: 0.25rem;
+    }
+    .tab-btn {
+      padding: 0.85rem 1.4rem;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--gray);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn:hover:not(.active) { color: var(--white); }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    /* ── LAYOUT ── */
+    .tab-content { display: none; padding: 1.8rem 1.5rem; max-width: 860px; margin: 0 auto; }
+    .tab-content.active { display: block; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem;
+      margin-bottom: 1.4rem;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.1rem;
+    }
+
+    /* ── BALANCE HERO ── */
+    .balance-hero {
+      background: linear-gradient(135deg, #1b3055 0%, #0f2240 100%);
+      border: 1px solid var(--gold-dim);
+      border-radius: 14px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      margin-bottom: 1.4rem;
+    }
+    .balance-label {
+      font-size: 0.75rem;
+      color: var(--gray);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+    .balance-amount {
+      font-size: 3.2rem;
+      font-weight: 800;
+      color: var(--gold);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .balance-currency { font-size: 1.7rem; color: var(--gold-dim); vertical-align: top; margin-top: 0.5rem; display: inline-block; }
+    .balance-meta { font-size: 0.76rem; color: var(--gray); margin-top: 0.7rem; }
+
+    /* ── FORM ── */
+    .section-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    .form-row { display: flex; gap: 0.9rem; margin-bottom: 0.85rem; }
+    .form-group { flex: 1; display: flex; flex-direction: column; gap: 0.35rem; }
+    label { font-size: 0.74rem; color: var(--gray); letter-spacing: 0.06em; text-transform: uppercase; }
+    input[type=text], input[type=number], textarea {
+      background: var(--navy-mid);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--white);
+      padding: 0.65rem 0.9rem;
+      font-size: 0.92rem;
+      font-family: inherit;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    input:focus, textarea:focus { outline: none; border-color: var(--gold-dim); }
+    input::placeholder, textarea::placeholder { color: #4a6080; }
+    input[type=number] { -moz-appearance: textfield; }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    /* ── TOGGLE ── */
+    .toggle-group { display: flex; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+    .toggle-btn {
+      flex: 1;
+      padding: 0.65rem 0.5rem;
+      border: none;
+      background: var(--navy-mid);
+      color: var(--gray);
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.15s, color 0.15s;
+    }
+    .toggle-btn.active-d { background: var(--green); color: #fff; }
+    .toggle-btn.active-w { background: var(--red); color: #fff; }
+
+    .toggle-xs { display: flex; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+    .toggle-xs button {
+      padding: 0.35rem 0.85rem;
+      border: none;
+      background: var(--navy-mid);
+      color: var(--gray);
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: all 0.15s;
+    }
+    .toggle-xs button.active { background: var(--gold-dim); color: var(--navy); }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      width: 100%;
+      padding: 0.85rem;
+      background: var(--gold);
+      color: var(--navy);
+      border: none;
+      border-radius: 9px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      transition: background 0.15s, transform 0.1s;
+      margin-top: 0.3rem;
+    }
+    .btn-primary:hover { background: var(--gold-light); }
+    .btn-primary:active { transform: scale(0.99); }
+    .btn-outline {
+      display: block;
+      margin: 0 auto;
+      padding: 0.65rem 2rem;
+      background: transparent;
+      color: var(--gold);
+      border: 1.5px solid var(--gold-dim);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      transition: all 0.15s;
+    }
+    .btn-outline:hover { background: var(--navy-light); }
+
+    /* ── TRANSACTIONS ── */
+    .tx-list { display: flex; flex-direction: column; gap: 0.55rem; }
+    .tx-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+      padding: 0.75rem 1rem;
+      background: var(--navy-mid);
+      border-radius: 9px;
+      border-left: 3px solid transparent;
+      transition: background 0.1s;
+    }
+    .tx-item:hover { background: var(--navy-light); }
+    .tx-item.deposit  { border-left-color: var(--green); }
+    .tx-item.withdrawal { border-left-color: var(--red); }
+    .tx-meta { flex: 1; min-width: 0; }
+    .tx-reason { font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tx-sub { font-size: 0.72rem; color: var(--gray); margin-top: 0.18rem; }
+    .tx-amount { font-size: 0.95rem; font-weight: 800; white-space: nowrap; }
+    .tx-amount.deposit { color: var(--green); }
+    .tx-amount.withdrawal { color: var(--red); }
+
+    /* ── NO DATA ── */
+    .no-data {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--gray);
+      font-size: 0.88rem;
+      font-style: italic;
+    }
+
+    /* ── CHART WRAPPERS ── */
+    .chart-wrap { position: relative; }
+    .chart-wrap canvas { max-height: 300px; }
+
+    /* ── EARNINGS ── */
+    .rate-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      color: var(--navy);
+      font-size: 2.6rem;
+      font-weight: 900;
+      padding: 0.4rem 1.6rem;
+      border-radius: 10px;
+      letter-spacing: -0.01em;
+    }
+    .earnings-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.7rem;
+      margin-top: 0.8rem;
+    }
+    @media (max-width: 680px) {
+      .earnings-grid { grid-template-columns: repeat(2, 1fr); }
+      .form-row { flex-direction: column; }
+      .balance-amount { font-size: 2.4rem; }
+    }
+    .earn-item {
+      background: var(--navy-mid);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 0.6rem;
+      text-align: center;
+    }
+    .earn-label { font-size: 0.7rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.4rem; }
+    .earn-value { font-size: 1rem; font-weight: 800; color: var(--gold); }
+
+    .projected-card { text-align: center; padding: 2rem 1.4rem; }
+    .projected-amount { font-size: 2.4rem; font-weight: 800; color: var(--gold); }
+    .projected-currency { font-size: 1.3rem; color: var(--gold-dim); }
+
+    /* ── RECORD TABLE ── */
+    .record-section { margin-bottom: 1.2rem; }
+    .record-section-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th {
+      text-align: left;
+      padding: 0.5rem 0.6rem;
+      color: var(--gray);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid var(--border);
+    }
+    td { padding: 0.65rem 0.6rem; border-bottom: 1px solid rgba(36,59,85,0.4); }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--navy); }
+    ::-webkit-scrollbar-thumb { background: var(--navy-light); border-radius: 3px; }
+
+    /* ── UPDATE FOOTER ── */
+    .update-footer { text-align: center; margin-top: 0.5rem; }
+    .update-ts { font-size: 0.72rem; color: var(--gray); margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Dough<span>Tracker</span></div>
+  <div id="headerDate"></div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="account">Account</button>
+  <button class="tab-btn" data-tab="reports">Reports</button>
+  <button class="tab-btn" data-tab="earnings">Earnings</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB 1 — ACCOUNT
+═══════════════════════════════════════════════════════════ -->
+<div id="tab-account" class="tab-content active">
+
+  <div class="balance-hero">
+    <div class="balance-label">Current Balance</div>
+    <div class="balance-amount">
+      <span class="balance-currency">₱</span><span id="balanceDisplay">0.00</span>
+    </div>
+    <div class="balance-meta" id="balanceMeta"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">New Transaction</div>
+
+    <div class="form-row">
+      <div class="form-group" style="max-width:220px">
+        <label>Type</label>
+        <div class="toggle-group">
+          <button class="toggle-btn active-d" id="btnDeposit">Deposit</button>
+          <button class="toggle-btn" id="btnWithdrawal">Withdrawal</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Amount (₱)</label>
+        <input type="number" id="amountInput" placeholder="0.00" min="0.01" step="0.01">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Reason <span style="color:#4a6080;font-size:0.7rem;">(optional)</span></label>
+        <input type="text" id="reasonInput" placeholder="e.g. Salary, Groceries…" maxlength="80">
+      </div>
+    </div>
+
+    <div class="form-row" id="causeRow" style="display:none">
+      <div class="form-group">
+        <label>Dedicated Cause <span style="color:#4a6080;font-size:0.7rem;">(optional)</span></label>
+        <input type="text" id="causeInput" placeholder="e.g. Emergency Fund, New Laptop…" maxlength="80">
+      </div>
+    </div>
+
+    <button class="btn-primary" id="submitBtn">Record Transaction</button>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Transaction History</div>
+    <div class="tx-list" id="txList"><div class="no-data">No transactions recorded yet.</div></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB 2 — REPORTS
+═══════════════════════════════════════════════════════════ -->
+<div id="tab-reports" class="tab-content">
+
+  <!-- PIE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="section-title" style="margin:0">Top 5 Dedicated Causes</div>
+    </div>
+    <div id="pieWrap" class="chart-wrap">
+      <div class="no-data" id="pieNoData">Not Enough Processable Data to Proceed</div>
+      <canvas id="pieChart" style="display:none"></canvas>
+    </div>
+  </div>
+
+  <!-- LINE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="section-title" style="margin:0">Balance Over Time</div>
+      <div class="toggle-xs">
+        <button id="btnMonthly" class="active">Monthly</button>
+        <button id="btnYearly">Yearly</button>
+      </div>
+    </div>
+    <div id="lineWrap" class="chart-wrap">
+      <div class="no-data" id="lineNoData">Not Enough Processable Data to Proceed</div>
+      <canvas id="lineChart" style="display:none"></canvas>
+    </div>
+  </div>
+
+  <!-- RECORD BOOK -->
+  <div class="card">
+    <div class="card-header">
+      <div class="section-title" style="margin:0">Record Book</div>
+      <div class="toggle-xs">
+        <button id="btnRecordMonth" class="active">Monthly</button>
+        <button id="btnRecordYear">Yearly</button>
+      </div>
+    </div>
+    <div id="recordBook"><div class="no-data">Not Enough Processable Data to Proceed</div></div>
+  </div>
+
+  <div class="update-footer">
+    <button class="btn-outline" id="updateReportsBtn">Update Reports</button>
+    <div class="update-ts" id="reportsTs"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB 3 — EARNINGS
+═══════════════════════════════════════════════════════════ -->
+<div id="tab-earnings" class="tab-content">
+
+  <div class="card" style="text-align:center;padding:2rem">
+    <div class="section-title">Annual Interest Rate</div>
+    <div class="rate-badge">18% p.a.</div>
+    <div style="font-size:0.78rem;color:var(--gray);margin-top:0.7rem;">
+      Simple interest · Recalibrates on every transaction &amp; weekly
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Estimated Interest Earned</div>
+    <div style="font-size:0.78rem;color:var(--gray);margin-bottom:1rem;">
+      Based on current balance of&nbsp;<span id="interestBase" style="color:var(--white);font-weight:700;">₱0.00</span>
+    </div>
+    <div class="earnings-grid">
+      <div class="earn-item"><div class="earn-label">Per Hour</div><div class="earn-value" id="earnHour">₱0.00</div></div>
+      <div class="earn-item"><div class="earn-label">Per Day</div><div class="earn-value" id="earnDay">₱0.00</div></div>
+      <div class="earn-item"><div class="earn-label">Per Week</div><div class="earn-value" id="earnWeek">₱0.00</div></div>
+      <div class="earn-item"><div class="earn-label">Per Month</div><div class="earn-value" id="earnMonth">₱0.00</div></div>
+      <div class="earn-item"><div class="earn-label">Per Year</div><div class="earn-value" id="earnYear">₱0.00</div></div>
+    </div>
+  </div>
+
+  <div class="card projected-card">
+    <div class="section-title">Projected Balance After 1 Year</div>
+    <div style="font-size:0.78rem;color:var(--gray);margin-bottom:0.8rem;">
+      Current balance + 18% simple interest
+    </div>
+    <div class="projected-amount">
+      <span class="projected-currency">₱</span><span id="projectedBal">0.00</span>
+    </div>
+    <div class="update-ts" id="earningsTs"></div>
+  </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+'use strict';
+
+// ─────────────────────────────────────────────
+// STATE & STORAGE
+// ─────────────────────────────────────────────
+const LS = {
+  get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
+};
+
+let balance      = LS.get('dt_balance') ?? 0;
+let transactions = LS.get('dt_transactions') ?? [];
+let txType       = 'deposit';
+let lineMode     = 'monthly';
+let recordMode   = 'monthly';
+let pieInst      = null;
+let lineInst     = null;
+
+const RATE = 0.18;
+
+function save() {
+  LS.set('dt_balance', balance);
+  LS.set('dt_transactions', transactions);
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  tickClock();
+  setInterval(tickClock, 30000);
+  setInterval(checkWeeklyPulse, 3600000); // hourly check
+
+  renderBalance();
+  renderTxList();
+  updateEarnings();
+  checkWeeklyPulse();
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = document.getElementById('tab-' + btn.dataset.tab);
+      tab.classList.add('active');
+      if (btn.dataset.tab === 'reports') renderReports();
+      if (btn.dataset.tab === 'earnings') updateEarnings();
+    });
+  });
+
+  // Type toggle
+  document.getElementById('btnDeposit').addEventListener('click', () => setTxType('deposit'));
+  document.getElementById('btnWithdrawal').addEventListener('click', () => setTxType('withdrawal'));
+
+  // Submit
+  document.getElementById('submitBtn').addEventListener('click', submitTx);
+  document.getElementById('amountInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitTx(); });
+
+  // Reports controls
+  document.getElementById('updateReportsBtn').addEventListener('click', () => {
+    markReportsUpdated();
+    renderReports();
+  });
+  document.getElementById('btnMonthly').addEventListener('click', () => setLineMode('monthly'));
+  document.getElementById('btnYearly').addEventListener('click',  () => setLineMode('yearly'));
+  document.getElementById('btnRecordMonth').addEventListener('click', () => setRecordMode('monthly'));
+  document.getElementById('btnRecordYear').addEventListener('click',  () => setRecordMode('yearly'));
+});
+
+// ─────────────────────────────────────────────
+// CLOCK
+// ─────────────────────────────────────────────
+function tickClock() {
+  const now = new Date();
+  document.getElementById('headerDate').textContent = now.toLocaleDateString('en-PH', {
+    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+  });
+  document.getElementById('balanceMeta').textContent =
+    'As of ' + now.toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+// ─────────────────────────────────────────────
+// BALANCE
+// ─────────────────────────────────────────────
+function renderBalance() {
+  document.getElementById('balanceDisplay').textContent = fmt(balance);
+  tickClock();
+}
+
+function fmt(n) {
+  return Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─────────────────────────────────────────────
+// TX TYPE TOGGLE
+// ─────────────────────────────────────────────
+function setTxType(type) {
+  txType = type;
+  const dBtn = document.getElementById('btnDeposit');
+  const wBtn = document.getElementById('btnWithdrawal');
+  dBtn.className = 'toggle-btn' + (type === 'deposit' ? ' active-d' : '');
+  wBtn.className = 'toggle-btn' + (type === 'withdrawal' ? ' active-w' : '');
+  document.getElementById('causeRow').style.display = type === 'deposit' ? 'flex' : 'none';
+  if (type === 'withdrawal') document.getElementById('causeInput').value = '';
+}
+
+// ─────────────────────────────────────────────
+// SUBMIT TRANSACTION
+// ─────────────────────────────────────────────
+function submitTx() {
+  const rawAmt = parseFloat(document.getElementById('amountInput').value);
+  if (!rawAmt || rawAmt <= 0 || isNaN(rawAmt)) {
+    flash(document.getElementById('amountInput'));
+    return;
+  }
+  const amount = Math.round(rawAmt * 100) / 100;
+  if (txType === 'withdrawal' && amount > balance) {
+    alert('Insufficient balance for this withdrawal.\n\nAvailable: ₱' + fmt(balance));
+    return;
+  }
+
+  const reason = document.getElementById('reasonInput').value.trim();
+  const cause  = (txType === 'deposit') ? document.getElementById('causeInput').value.trim() : '';
+
+  balance = Math.round((txType === 'deposit' ? balance + amount : balance - amount) * 100) / 100;
+
+  const tx = {
+    id:           Date.now(),
+    type:         txType,
+    amount,
+    reason,
+    cause,
+    date:         new Date().toISOString(),
+    balanceAfter: balance
+  };
+  transactions.unshift(tx);
+  save();
+
+  // Reset
+  document.getElementById('amountInput').value  = '';
+  document.getElementById('reasonInput').value  = '';
+  document.getElementById('causeInput').value   = '';
+
+  renderBalance();
+  renderTxList();
+  updateEarnings();       // immediate interest recalibration
+  onTxChange();           // trigger reports refresh if tab open
+}
+
+function flash(el) {
+  el.style.borderColor = 'var(--red)';
+  el.focus();
+  setTimeout(() => el.style.borderColor = '', 800);
+}
+
+// ─────────────────────────────────────────────
+// TRANSACTION LIST
+// ─────────────────────────────────────────────
+function renderTxList() {
+  const el = document.getElementById('txList');
+  if (!transactions.length) {
+    el.innerHTML = '<div class="no-data">No transactions recorded yet.</div>';
+    return;
+  }
+  el.innerHTML = transactions.slice(0, 60).map(tx => {
+    const d = new Date(tx.date);
+    const dateStr = d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
+      + ' · ' + d.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+    const label = tx.reason || (tx.type === 'deposit' ? 'Deposit' : 'Withdrawal');
+    const sub   = [tx.cause ? 'For: ' + tx.cause : '', 'Balance after: ₱' + fmt(tx.balanceAfter)]
+                    .filter(Boolean).join(' · ');
+    return `<div class="tx-item ${tx.type}">
+      <div class="tx-meta">
+        <div class="tx-reason">${esc(label)}</div>
+        <div class="tx-sub">${esc(sub)} &nbsp;·&nbsp; ${esc(dateStr)}</div>
+      </div>
+      <div class="tx-amount ${tx.type}">${tx.type === 'deposit' ? '+' : '−'}₱${fmt(tx.amount)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+// REPORTS — TRIGGER & RENDER
+// ─────────────────────────────────────────────
+function markReportsUpdated() {
+  const now = Date.now();
+  LS.set('dt_reports_ts', now);
+}
+
+function onTxChange() {
+  markReportsUpdated();
+  if (document.getElementById('tab-reports').classList.contains('active')) renderReports();
+}
+
+function checkWeeklyPulse() {
+  const last = LS.get('dt_weekly_ts') || 0;
+  const WEEK = 7 * 24 * 3600 * 1000;
+  if (Date.now() - last > WEEK) {
+    LS.set('dt_weekly_ts', Date.now());
+    markReportsUpdated();
+    updateEarnings();
+    if (document.getElementById('tab-reports').classList.contains('active')) renderReports();
+  }
+}
+
+function renderReports() {
+  renderPie();
+  renderLine();
+  renderRecordBook();
+  const ts = LS.get('dt_reports_ts');
+  document.getElementById('reportsTs').textContent =
+    ts ? 'Last updated: ' + new Date(ts).toLocaleString('en-PH') : '';
+}
+
+// ─────────────────────────────────────────────
+// PIE CHART
+// ─────────────────────────────────────────────
+function normKey(s) { return s.replace(/\s+/g, '').toLowerCase(); }
+
+function renderPie() {
+  const deposits = transactions.filter(t => t.type === 'deposit' && t.cause.trim());
+  const show = canvas => {
+    document.getElementById('pieNoData').style.display = 'none';
+    document.getElementById('pieChart').style.display = 'block';
+  };
+  const hide = () => {
+    document.getElementById('pieNoData').style.display = 'block';
+    document.getElementById('pieChart').style.display = 'none';
+    if (pieInst) { pieInst.destroy(); pieInst = null; }
+  };
+
+  if (deposits.length < 2) { hide(); return; }
+
+  // Group by normalized key, keep first display name
+  const totals = {}, names = {};
+  deposits.forEach(t => {
+    const k = normKey(t.cause);
+    totals[k] = (totals[k] || 0) + t.amount;
+    if (!names[k]) names[k] = t.cause;
+  });
+
+  const sorted = Object.entries(totals).sort((a,b) => b[1]-a[1]).slice(0,5);
+  if (sorted.length < 2) { hide(); return; }
+
+  show();
+  const canvas = document.getElementById('pieChart');
+  const COLORS = ['#f0c040','#3dbf7a','#5b9bd5','#e05c6a','#a47fdb'];
+
+  if (pieInst) pieInst.destroy();
+  pieInst = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: sorted.map(([k]) => names[k]),
+      datasets: [{
+        data: sorted.map(([,v]) => v),
+        backgroundColor: COLORS,
+        borderColor: '#1a2840',
+        borderWidth: 3
+      }]
+    },
+    options: {
+      cutout: '58%',
+      plugins: {
+        legend: { labels: { color: '#f0f4f8', font: { size: 12 }, padding: 16 } },
+        tooltip: { callbacks: { label: ctx => ' ₱' + fmt(ctx.raw) } }
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+// LINE CHART
+// ─────────────────────────────────────────────
+function setLineMode(m) {
+  lineMode = m;
+  document.getElementById('btnMonthly').classList.toggle('active', m === 'monthly');
+  document.getElementById('btnYearly').classList.toggle('active', m === 'yearly');
+  renderLine();
+}
+
+function renderLine() {
+  const noData = document.getElementById('lineNoData');
+  const canvas = document.getElementById('lineChart');
+  const hide = () => {
+    noData.style.display = 'block'; canvas.style.display = 'none';
+    if (lineInst) { lineInst.destroy(); lineInst = null; }
+  };
+
+  if (!transactions.length) { hide(); return; }
+
+  // Build period → final balance map (last transaction per period wins)
+  const map = {};
+  [...transactions].reverse().forEach(tx => {
+    const d = new Date(tx.date);
+    const key = lineMode === 'monthly'
+      ? d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')
+      : String(d.getFullYear());
+    map[key] = tx.balanceAfter;
+  });
+
+  const keys = Object.keys(map).sort();
+  if (keys.length < 2) { hide(); return; }
+
+  noData.style.display = 'none';
+  canvas.style.display = 'block';
+
+  const labels = keys.map(k => lineMode === 'monthly'
+    ? new Date(k+'-02').toLocaleDateString('en-PH', { month:'short', year:'numeric' })
+    : k
+  );
+
+  if (lineInst) lineInst.destroy();
+  lineInst = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Balance (₱)',
+        data: keys.map(k => map[k]),
+        borderColor: '#f0c040',
+        backgroundColor: 'rgba(240,192,64,0.08)',
+        pointBackgroundColor: '#f0c040',
+        pointRadius: 5,
+        tension: 0.35,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: { ticks: { color: '#7a8fa6' }, grid: { color: 'rgba(36,59,85,0.5)' } },
+        y: {
+          ticks: { color: '#7a8fa6', callback: v => '₱' + fmt(v) },
+          grid: { color: 'rgba(36,59,85,0.5)' }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' ₱' + fmt(ctx.raw) } }
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+// RECORD BOOK
+// ─────────────────────────────────────────────
+function setRecordMode(m) {
+  recordMode = m;
+  document.getElementById('btnRecordMonth').classList.toggle('active', m === 'monthly');
+  document.getElementById('btnRecordYear').classList.toggle('active', m === 'yearly');
+  renderRecordBook();
+}
+
+function renderRecordBook() {
+  const el  = document.getElementById('recordBook');
+  const now = new Date();
+
+  const inPeriod = tx => {
+    const d = new Date(tx.date);
+    return recordMode === 'monthly'
+      ? d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+      : d.getFullYear() === now.getFullYear();
+  };
+
+  const filtered = transactions.filter(inPeriod);
+  const deps = filtered.filter(t => t.type === 'deposit').sort((a,b) => b.amount - a.amount).slice(0,5);
+  const wds  = filtered.filter(t => t.type === 'withdrawal').sort((a,b) => b.amount - a.amount).slice(0,5);
+
+  if (!deps.length && !wds.length) {
+    el.innerHTML = '<div class="no-data">Not Enough Processable Data to Proceed</div>';
+    return;
+  }
+
+  const periodStr = recordMode === 'monthly'
+    ? now.toLocaleDateString('en-PH', { month:'long', year:'numeric' })
+    : now.getFullYear().toString();
+
+  const buildRows = list => list.map(tx => {
+    const d = new Date(tx.date).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+    const label = tx.reason || (tx.type==='deposit'?'Deposit':'Withdrawal');
+    return `<tr>
+      <td>
+        ${esc(label)}
+        ${tx.cause ? `<br><span style="font-size:0.7rem;color:var(--gray)">For: ${esc(tx.cause)}</span>` : ''}
+      </td>
+      <td style="font-weight:800;color:${tx.type==='deposit'?'var(--green)':'var(--red)'}">
+        ${tx.type==='deposit'?'+':'−'}₱${fmt(tx.amount)}
+      </td>
+      <td style="color:var(--gray)">${d}</td>
+      <td>₱${fmt(tx.balanceAfter)}</td>
+    </tr>`;
+  }).join('');
+
+  const table = (rows, color, heading) => !rows.length ? '' : `
+    <div class="record-section">
+      <div class="record-section-label" style="color:${color}">${heading}</div>
+      <table>
+        <thead><tr>
+          <th>Reason</th><th>Amount</th><th>Date</th><th>Balance After</th>
+        </tr></thead>
+        <tbody>${buildRows(rows)}</tbody>
+      </table>
+    </div>`;
+
+  el.innerHTML = `
+    <div style="font-size:0.74rem;color:var(--gray);margin-bottom:1rem">Period: ${periodStr}</div>
+    ${table(deps, 'var(--green)', 'Top Deposits')}
+    ${table(wds,  'var(--red)',   'Top Withdrawals')}
+  `;
+}
+
+// ─────────────────────────────────────────────
+// EARNINGS (INTEREST)
+// ─────────────────────────────────────────────
+function updateEarnings() {
+  const P       = balance;
+  const perYear = P * RATE;
+  document.getElementById('interestBase').textContent = '₱' + fmt(P);
+  document.getElementById('earnHour').textContent     = '₱' + fmt(perYear / (365 * 24));
+  document.getElementById('earnDay').textContent      = '₱' + fmt(perYear / 365);
+  document.getElementById('earnWeek').textContent     = '₱' + fmt(perYear / 52);
+  document.getElementById('earnMonth').textContent    = '₱' + fmt(perYear / 12);
+  document.getElementById('earnYear').textContent     = '₱' + fmt(perYear);
+  document.getElementById('projectedBal').textContent = fmt(P + perYear);
+  document.getElementById('earningsTs').textContent   =
+    'Calibrated: ' + new Date().toLocaleString('en-PH');
+  LS.set('dt_earnings_ts', Date.now());
+}
+</script>
+</body>
+</html>
